@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1020">
+<title>REACTION PRO</title>
+<style>
+* { box-sizing:border-box; }
+body {
+ margin:0;
+ min-height:100vh;
+ padding:25px 18px;
+ background:radial-gradient(circle at top,#202b49,#0b1020 65%);
+ color:white;
+ font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+ text-align:center;
+}
+.app { max-width:480px; margin:auto; }
+h1 {
+ font-size:34px;
+ letter-spacing:4px;
+ margin:15px 0 5px;
+}
+.subtitle { color:#8d9bb8; margin-bottom:25px; }
+.stats {
+ display:flex;
+ gap:12px;
+ margin-bottom:25px;
+}
+.stat {
+ flex:1;
+ background:#18233b;
+ border:1px solid #2b3b5d;
+ border-radius:15px;
+ padding:13px 5px;
+}
+.stat small {
+ display:block;
+ color:#91a1bf;
+ font-size:11px;
+ margin-bottom:7px;
+}
+.stat strong { font-size:23px; }
+.game {
+ min-height:300px;
+ border-radius:25px;
+ background:#121c31;
+ border:1px solid #293a5d;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ padding:25px 15px;
+}
+.circle {
+ width:145px;
+ height:145px;
+ border-radius:50%;
+ background:#ff4058;
+ box-shadow:0 0 35px #ff405855;
+ margin-bottom:25px;
+ transition:background .15s,box-shadow .15s;
+}
+.circle.green {
+ background:#30ed9a;
+ box-shadow:0 0 45px #30ed9a88;
+}
+.circle.yellow {
+ background:#ffc857;
+ box-shadow:0 0 45px #ffc85788;
+}
+.message {
+ font-size:20px;
+ font-weight:700;
+ min-height:30px;
+}
+.description {
+ color:#91a1bf;
+ font-size:14px;
+ margin-top:9px;
+}
+button {
+ width:100%;
+ border:0;
+ border-radius:14px;
+ padding:17px;
+ margin-top:18px;
+ background:linear-gradient(135deg,#35e5a0,#16b981);
+ color:#071c19;
+ font-size:17px;
+ font-weight:800;
+ cursor:pointer;
+}
+button:active { transform:scale(.98); }
+.history {
+ margin-top:25px;
+ background:#18233b;
+ border-radius:16px;
+ padding:17px;
+ text-align:left;
+}
+.history h3 { margin:0 0 12px; }
+.history div {
+ color:#aebbd2;
+ padding:7px 0;
+ border-bottom:1px solid #293753;
+ font-size:14px;
+}
+.tip {
+ color:#8492ac;
+ font-size:12px;
+ margin-top:20px;
+ line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="app">
+ <h1>REACTION <span style="color:#35e5a0">PRO</span></h1>
+ <div class="subtitle">Проверь скорость своей реакции</div>
+
+ <div class="stats">
+  <div class="stat">
+   <small>ПОСЛЕДНИЙ РЕЗУЛЬТАТ</small>
+   <strong id="last">—</strong>
+  </div>
+  <div class="stat">
+   <small>ЛУЧШИЙ РЕЗУЛЬТАТ</small>
+   <strong id="best">—</strong>
+  </div>
+ </div>
+
+ <div class="game" id="game">
+  <div class="circle" id="circle"></div>
+  <div class="message" id="message">Готов испытать себя?</div>
+  <div class="description" id="description">
+   Нажми кнопку, чтобы начать
+  </div>
+ </div>
+
+ <button id="start" onclick="startGame()">НАЧАТЬ ИГРУ</button>
+
+ <div class="history">
+  <h3>🏆 Последние попытки</h3>
+  <div id="history">Пока попыток нет</div>
+ </div>
+
+ <div class="tip">
+  Дождись зелёного сигнала и нажми на круг как можно быстрее.<br>
+  Не нажимай раньше времени!
+ </div>
+</div>
+
+<script>
+let state="idle";
+let timer=null;
+let startTime=0;
+let best=Number(localStorage.getItem("reactionBest")||0);
+let history=JSON.parse(localStorage.getItem("reactionHistory")||"[]");
+let last=0;
+
+const circle=document.getElementById("circle");
+const message=document.getElementById("message");
+const description=document.getElementById("description");
+const button=document.getElementById("start");
+const game=document.getElementById("game");
+
+function updateStats(){
+ document.getElementById("last").textContent=last?last+" ms":"—";
+ document.getElementById("best").textContent=best?best+" ms":"—";
+ const area=document.getElementById("history");
+ area.innerHTML="";
+ if(!history.length){
+  area.textContent="Пока попыток нет";
+ } else {
+  history.forEach((v,i)=>{
+   const row=document.createElement("div");
+   row.textContent=(i+1)+". "+v+" ms";
+   area.appendChild(row);
+  });
+ }
+}
+
+function resetVisual(){
+ circle.className="circle";
+}
+
+function startGame(){
+ clearTimeout(timer);
+ state="waiting";
+ resetVisual();
