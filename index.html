@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f3ee">
+<title>Мои заметки</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 25px 18px;
+  background: #f5f3ee;
+  color: #292820;
+  font-family: -apple-system, sans-serif;
+}
+h1 { font-size: 32px; margin-bottom: 5px; }
+.sub { color: #888; margin-bottom: 25px; }
+textarea {
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  border-radius: 16px;
+  padding: 16px;
+  font: inherit;
+  font-size: 17px;
+  resize: vertical;
+  background: white;
+}
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.add {
+  background: #343c32;
+  color: white;
+  width: 100%;
+  margin-top: 10px;
+}
+h2 { margin-top: 30px; font-size: 20px; }
+.note {
+  background: white;
+  border-radius: 15px;
+  padding: 17px;
+  margin: 12px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.delete {
+  color: #a33;
+  background: #f8eeee;
+  margin-top: 12px;
+  padding: 9px 14px;
+}
+</style>
+</head>
+<body>
+<h1>Мои заметки ✨</h1>
+<p class="sub">Твои мысли всегда под рукой</p>
+
+<textarea id="input" placeholder="Напиши что-нибудь..."></textarea>
+<button class="add" onclick="addNote()">+ Сохранить заметку</button>
+
+<h2>Мои записи</h2>
+<div id="notes"></div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem("myNotes") || "[]");
+
+function save() {
+  localStorage.setItem("myNotes", JSON.stringify(notes));
+  render();
+}
+
+function addNote() {
+  const input = document.getElementById("input");
+  if (!input.value.trim()) return;
+  notes.unshift({
+    id: Date.now(),
+    text: input.value.trim()
+  });
+  input.value = "";
+  save();
+}
+
+function deleteNote(id) {
+  notes = notes.filter(note => note.id !== id);
+  save();
+}
+
+function render() {
+  const area = document.getElementById("notes");
+  area.innerHTML = "";
+  if (!notes.length) {
+    area.textContent = "Пока заметок нет. Создай первую!";
+    return;
+  }
+  notes.forEach(note => {
+    const card = document.createElement("div");
+    card.className = "note";
+    const text = document.createElement("div");
+    text.textContent = note.text;
+    const btn = document.createElement("button");
+    btn.className = "delete";
+    btn.textContent = "Удалить";
+    btn.onclick = () => deleteNote(note.id);
+    card.append(text, btn);
+    area.appendChild(card);
+  });
+}
+render();
+</script>
+</body>
+</html>
